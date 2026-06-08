@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/code4ry/krave/issues"
   },
-  "homepage": "https://github.com/code4ry/krave#readme"
+  "homepage": "https://github.com/code4ry/krave#readme",
+  "dependencies": {
+    "firebase": "^12.14.0"
+  }
 }

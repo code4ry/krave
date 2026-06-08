@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AuthContext } from '@/utils/authContext';
+import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
@@ -33,6 +34,14 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const handleLogIn = async () => {
+    try {
+      await authContext.logIn(email, password);
+    } catch {
+      // AuthContext owns the user-facing error message.
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -116,7 +125,10 @@ export default function LoginScreen() {
             icon="mail-outline"
             keyboardType="email-address"
             label="Email"
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              authContext.clearError();
+              setEmail(value);
+            }}
             placeholder="chef@kraveapp.com"
             textContentType="emailAddress"
             value={email}
@@ -125,8 +137,11 @@ export default function LoginScreen() {
           <LoginField
             icon="lock-closed-outline"
             label="Password"
-            onChangeText={setPassword}
-            placeholder="••••••••"
+            onChangeText={(value) => {
+              authContext.clearError();
+              setPassword(value);
+            }}
+            placeholder="Password"
             secureTextEntry={!isPasswordVisible}
             textContentType="password"
             value={password}
@@ -137,9 +152,9 @@ export default function LoginScreen() {
                 }
                 onPress={() => setIsPasswordVisible((visible) => !visible)}
                 style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -147,7 +162,7 @@ export default function LoginScreen() {
                 <Ionicons
                   name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
                   color={palette.brown}
-                  size={25}
+                  size={22}
                 />
               </Pressable>
             }
@@ -172,17 +187,20 @@ export default function LoginScreen() {
         </Pressable>
 
         <Pressable
-          onPress={authContext.logIn}
+          disabled={authContext.isLoading}
+          onPress={handleLogIn}
           style={({ pressed }) => ({
-            height: 94,
-            borderRadius: 22,
+            height: 58,
+            borderRadius: 16,
             borderCurve: 'continuous',
-            backgroundColor: palette.primary,
+            backgroundColor: authContext.isLoading
+              ? palette.outline
+              : palette.primaryBright,
             alignItems: 'center',
             justifyContent: 'center',
-            marginTop: 34,
+            marginTop: 28,
             transform: [{ scale: pressed ? 0.98 : 1 }],
-            boxShadow: '0 10px 22px rgba(56, 63, 81, 0.12)',
+            boxShadow: '0 8px 20px rgba(56, 63, 81, 0.12)',
           })}
         >
           <Text
@@ -190,21 +208,37 @@ export default function LoginScreen() {
             style={{
               color: palette.white,
               fontFamily: 'Inter_700Bold',
-              fontSize: 34,
-              lineHeight: 40,
+              fontSize: 20,
+              lineHeight: 26,
             }}
           >
-            Log In
+            {authContext.isLoading ? 'Logging In...' : 'Log In'}
           </Text>
         </Pressable>
+
+        {authContext.errorMessage ? (
+          <Text
+            selectable
+            style={{
+              color: palette.primary,
+              fontFamily: 'Inter_600SemiBold',
+              fontSize: 14,
+              lineHeight: 20,
+              marginTop: 12,
+              textAlign: 'center',
+            }}
+          >
+            {authContext.errorMessage}
+          </Text>
+        ) : null}
 
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             gap: 24,
-            marginTop: 48,
-            marginBottom: 34,
+            marginTop: 36,
+            marginBottom: 24,
           }}
         >
           <View style={{ flex: 1, height: 1, backgroundColor: palette.outline }} />
@@ -226,8 +260,8 @@ export default function LoginScreen() {
             icon={
               <View
                 style={{
-                  width: 36,
-                  height: 36,
+                  width: 26,
+                  height: 26,
                   backgroundColor: '#050914',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -238,7 +272,7 @@ export default function LoginScreen() {
                   style={{
                     color: '#4285F4',
                     fontFamily: 'Inter_700Bold',
-                    fontSize: 13,
+                    fontSize: 11,
                   }}
                 >
                   G
@@ -255,7 +289,7 @@ export default function LoginScreen() {
                 style={{
                   color: palette.white,
                   fontFamily: 'Inter_900Black',
-                  fontSize: 18,
+                  fontSize: 14,
                 }}
               >
                 iOS
@@ -288,19 +322,21 @@ export default function LoginScreen() {
           >
             {"Don't have an account?"}
           </Text>
-          <Pressable hitSlop={8}>
-            <Text
-              selectable
-              style={{
-                color: palette.primary,
-                fontFamily: 'Inter_700Bold',
-                fontSize: 18,
-                lineHeight: 24,
-              }}
-            >
-              Sign Up
-            </Text>
-          </Pressable>
+          <Link href="/signup" asChild>
+            <Pressable hitSlop={8}>
+              <Text
+                selectable
+                style={{
+                  color: palette.primary,
+                  fontFamily: 'Inter_700Bold',
+                  fontSize: 18,
+                  lineHeight: 24,
+                }}
+              >
+                Sign Up
+              </Text>
+            </Pressable>
+          </Link>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -344,19 +380,19 @@ function LoginField({
       </Text>
       <View
         style={{
-          minHeight: 84,
-          borderRadius: 16,
+          minHeight: 58,
+          borderRadius: 12,
           borderCurve: 'continuous',
           backgroundColor: palette.white,
           flexDirection: 'row',
           alignItems: 'center',
-          paddingLeft: 24,
-          paddingRight: trailing ? 12 : 24,
-          gap: 18,
+          paddingLeft: 16,
+          paddingRight: trailing ? 10 : 16,
+          gap: 12,
           boxShadow: '0 4px 20px rgba(56, 63, 81, 0.05)',
         }}
       >
-        <Ionicons name={icon} color={palette.brown} size={30} />
+        <Ionicons name={icon} color={palette.brown} size={22} />
         <TextInput
           autoCapitalize="none"
           autoComplete={textContentType === 'emailAddress' ? 'email' : 'password'}
@@ -369,7 +405,7 @@ function LoginField({
             flex: 1,
             color: palette.brown,
             fontFamily: 'Inter_500Medium',
-            fontSize: 24,
+            fontSize: 16,
             paddingVertical: 0,
           }}
           textContentType={textContentType}
@@ -395,8 +431,8 @@ function AuthButton({
   return (
     <Pressable
       style={({ pressed }) => ({
-        height: 84,
-        borderRadius: 18,
+        height: 56,
+        borderRadius: 16,
         borderCurve: 'continuous',
         borderWidth: 1,
         borderColor: isDark ? palette.navy : palette.outline,
@@ -404,7 +440,7 @@ function AuthButton({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 22,
+        gap: 12,
         transform: [{ scale: pressed ? 0.98 : 1 }],
       })}
     >
@@ -414,8 +450,8 @@ function AuthButton({
         style={{
           color: isDark ? palette.white : palette.text,
           fontFamily: 'Inter_700Bold',
-          fontSize: 20,
-          lineHeight: 26,
+          fontSize: 16,
+          lineHeight: 22,
         }}
       >
         {label}
